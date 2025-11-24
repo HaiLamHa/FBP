@@ -226,12 +226,12 @@ export default function GalleryPage() {
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">It Wasn&apos;t Me - Gallery</h1>
 
         {/* Image Grid Container */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 mb-12">
+        <div className="gallery-grid mb-12">
           {images.map((imgState, index) => (
             <div key={index} className="flex flex-col">
               {/* Image Slot (Rectangular Aspect Ratio) */}
               <div className="image-slot group">
-                <span className="absolute top-2 left-2 text-white font-bold bg-black bg-opacity-50 px-2 rounded z-20">
+                <span className="slot-number">
                   {index + 1}.
                 </span>
                 
