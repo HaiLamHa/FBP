@@ -1,26 +1,169 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* NOTE: Tailwind base/components/utilities MUST be at the top */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* -------------------------------------------------------------------------- */
+/* CUSTOM STYLES (from your old style.css)                                    */
+/* -------------------------------------------------------------------------- */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* INDEX.HTML STYLES */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    /* We'll use Tailwind classes in the components for background/padding/etc. */
+}
+
+/* Style for the camera input wrapper */
+.camera-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hide the default file input visually but keep it functional */
+.camera-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* Make the input invisible */
+    cursor: pointer;
+}
+
+/* GALLERY.HTML STYLES */
+
+/* Custom CSS for the fixed aspect ratio of the image boxes */
+.image-slot {
+    position: relative;
+    background-color: #ef4444; /* Red color as shown in the mockup */
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    aspect-ratio: 4 / 3; 
+    transition: transform 0.2s;
+}
+
+.image-slot:hover {
+    transform: scale(1.02);
+}
+
+/* Styles for the visible image inside the slot */
+.image-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Hide the default file input visually but keep it functional */
+.file-input {
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 10; /* Ensure it is on top of the image */
+}
+
+/* Remove Button Styling */
+.remove-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 30; /* Above everything else */
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    line-height: 25px; /* Center the X vertically */
+    text-align: center;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s, background 0.2s;
+}
+
+.remove-button:hover {
+    background: #dc2626; /* Red background on hover */
+    opacity: 1;
+}
+
+/* --- AI FUNCTIONALITY STYLES --- */
+
+.keyword-tag {
+    background-color: #e0e7ff; /* Indigo-100 */
+    color: #3730a3; /* Indigo-800 */
+    font-size: 0.75rem; /* 12px */
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px; /* rounded-full */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.error-text {
+    color: #ef4444; /* red-500 */
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* Loading dots for keyword analysis */
+.loading-dots {
+  display: inline-block;
+  position: relative;
+  width: 60px;
+  height: 20px;
+}
+.loading-dots::after {
+  content: '...';
+  font-size: 30px;
+  color: #9ca3af; /* gray-400 */
+  position: absolute;
+  top: -10px;
+  left: 0;
+  animation: dots 1.4s infinite;
+}
+@keyframes dots {
+  0% { content: '.'; }
+  25% { content: '..'; }
+  50% { content: '...'; }
+  75% { content: '..'; }
+  100% { content: '.'; }
+}
+
+
+/* Full-screen Loading Modal (We'll use a component for this in Next.js, but keep the core spinner/dots) */
+.loading-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 50; /* Z-index needs to be high */
+    color: white;
+    font-size: 1.125rem;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f4f6; /* gray-100 */
+    border-top: 4px solid #3b82f6; /* blue-500 */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
