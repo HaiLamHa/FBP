@@ -6,9 +6,11 @@ interface CustomModalProps {
   show: boolean;
   message: string;
   onClose: () => void;
+  primaryLabel?: string;
+  onPrimary?: () => void;
 }
 
-export default function CustomModal({ show, message, onClose }: CustomModalProps) {
+export default function CustomModal({ show, message, onClose, primaryLabel, onPrimary }: CustomModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,6 +27,14 @@ export default function CustomModal({ show, message, onClose }: CustomModalProps
 
   if (!show) return null;
 
+  const handlePrimaryClick = () => {
+    if (onPrimary) {
+      onPrimary();
+    } else {
+      onClose();
+    }
+  };
+
   return (
     <div 
       id="custom-modal" 
@@ -38,10 +48,10 @@ export default function CustomModal({ show, message, onClose }: CustomModalProps
       >
         <p className="text-gray-700 mb-4 whitespace-pre-wrap">{message}</p>
         <button 
-          onClick={onClose} 
+          onClick={handlePrimaryClick} 
           className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
         >
-          OK
+          {primaryLabel ?? 'OK'}
         </button>
       </div>
     </div>

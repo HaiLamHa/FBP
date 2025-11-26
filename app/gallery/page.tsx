@@ -17,32 +17,63 @@ interface ImageState {
   keywords: string[] | null;
 }
 
+interface ModalState {
+  message: string;
+  show: boolean;
+  actionLabel?: string;
+  onAction?: (() => void) | null;
+}
+
+const createEmptyImageSlots = (): ImageState[] =>
+  Array.from({ length: NUM_SLOTS }, () => ({ base64: null, keywords: null }));
+
 // --- Persistence Functions ---
 const saveImagesToLocalStorage = (images: ImageState[]) => {
+  if (typeof window === 'undefined') return;
+
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(images.map(img => img.base64)));
+    const serialized = JSON.stringify(
+      images.map(img => ({
+        base64: img.base64,
+        keywords: img.keywords,
+      }))
+    );
+    localStorage.setItem(STORAGE_KEY, serialized);
   } catch (e) { console.error("Error saving images:", e); }
 };
 
 const loadImagesFromLocalStorage = (): ImageState[] => {
-  if (typeof window === 'undefined') return Array(NUM_SLOTS).fill({ base64: null, keywords: null });
+  if (typeof window === 'undefined') return createEmptyImageSlots();
 
   try {
     const storedData = localStorage.getItem(STORAGE_KEY);
     if (storedData) {
-      const loadedBase64s: (string | null)[] = JSON.parse(storedData);
-      return loadedBase64s.map(base64 => ({ base64, keywords: null }));
+      const parsed = JSON.parse(storedData);
+      if (Array.isArray(parsed)) {
+        return Array.from({ length: NUM_SLOTS }, (_, index) => {
+          const entry = parsed[index];
+          if (entry && typeof entry === 'object') {
+            const base64 = typeof entry.base64 === 'string' ? entry.base64 : null;
+            const keywords = Array.isArray(entry.keywords) ? entry.keywords : null;
+            return { base64, keywords };
+          }
+          if (typeof entry === 'string') {
+            return { base64: entry, keywords: null };
+          }
+          return { base64: null, keywords: null };
+        });
+      }
     }
   } catch (e) {
     console.error("Error loading images:", e);
   }
-  return Array(NUM_SLOTS).fill({ base64: null, keywords: null });
+  return createEmptyImageSlots();
 };
 
 // --- Main Component ---
 export default function GalleryPage() {
   const [images, setImages] = useState<ImageState[]>(() => loadImagesFromLocalStorage());
-  const [modal, setModal] = useState<{ message: string; show: boolean }>({ message: '', show: false });
+  const [modal, setModal] = useState<ModalState>({ message: '', show: false });
   const [loading, setLoading] = useState(false);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -53,7 +84,13 @@ export default function GalleryPage() {
 
   // --- Utility Functions ---
 
-  const showModal = (message: string) => setModal({ message, show: true });
+  const showModal = (message: string, action?: { label: string; handler: () => void }) =>
+    setModal({
+      message,
+      show: true,
+      actionLabel: action?.label,
+      onAction: action?.handler ?? null,
+    });
   const closeModal = () => setModal({ message: '', show: false });
   const showLoading = (show: boolean, text: string = "Loading...") => {
     if (typeof document !== 'undefined') {
@@ -196,16 +233,29 @@ export default function GalleryPage() {
     showLoading(true, "Generating story...");
 
     try {
+      const evidencePayload = evidence.map(img => ({
+        keywords: img.keywords ?? [],
+      }));
+
       const response = await fetch(`${API_BASE_URL}/story`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ evidence: evidence }),
+        body: JSON.stringify({ evidence: evidencePayload }),
       });
       const result = await response.json();
 
       if (result.story) {
         sessionStorage.setItem('generatedStory', result.story);
-        window.location.href = '/story'; // Navigate to the story page
+        showModal(
+          'Your story has been generated. Click "Read story" to view it.',
+          {
+            label: 'Read story',
+            handler: () => {
+              closeModal();
+              window.location.href = '/story';
+            },
+          }
+        );
       } else {
         throw new Error(result.error || "Invalid response structure from backend.");
       }
@@ -323,7 +373,9 @@ export default function GalleryPage() {
       <CustomModal 
         show={modal.show} 
         message={modal.message} 
-        onClose={closeModal} 
+        onClose={closeModal}
+        primaryLabel={modal.actionLabel}
+        onPrimary={modal.onAction ?? undefined}
       />
     </div>
   );
