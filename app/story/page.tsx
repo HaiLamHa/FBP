@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 const getInitialStory = () => {
@@ -13,20 +13,43 @@ const getInitialStory = () => {
 
 export default function StoryPage() {
   const [storyContent] = useState<string>(getInitialStory);
+  const [policeStory, setPoliceStory] = useState<string>('Loading police report...');
+
+  useEffect(() => {
+    const loadPoliceStory = async () => {
+      try {
+        const response = await fetch('/police_AI_story.txt');
+        if (!response.ok) throw new Error('Failed to load police story');
+        const text = await response.text();
+        setPoliceStory(text);
+      } catch (err) {
+        console.error('Error loading police story:', err);
+        setPoliceStory('Could not load the police report. Please try again later.');
+      }
+    };
+
+    loadPoliceStory();
+  }, []);
 
   return (
     <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-serif">
-      <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-center text-gray-800 mb-8">The Story of the Incident</h1>
-        
-        <div 
-          id="story-content" 
-          className="text-lg text-gray-700 leading-relaxed whitespace-pre-wrap"
-        >
-          {/* Display the story, replacing newlines with <br /> tags for HTML */}
-          {storyContent.split('\n').map((line, index) => (
-            <p key={index} className="mb-4">{line}</p>
-          ))}
+
+        <div className="grid md:grid-cols-2 gap-6 md:gap-10 bg-white rounded-xl shadow-lg divide-y md:divide-y-0 md:divide-x divide-gray-200">
+          <section className="p-6 md:p-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center md:text-left">Official police report</h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-lg text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[320px]">
+              {policeStory}
+            </div>
+          </section>
+
+          <section className="p-6 md:p-8 md:pl-10">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center md:text-left">AI generated story</h2>
+            <div id="story-content" className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-lg text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[320px]">
+              {storyContent}
+            </div>
+          </section>
         </div>
 
         <p className="text-center mt-10 text-base">

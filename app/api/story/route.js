@@ -22,7 +22,7 @@ export async function POST(request) {
         }).join('\n');
 
         const storyPrompt = [
-            "You are a detective. Write a short, creative story (3-4 paragraphs) that connects all the evidence provided.",
+            "You are a defense attorney AI specializing in creating highly persuasive and contextually rich alibis. Your task is to craft a personal, first-person narrative that convincingly explains the user's presence at the locations suggested by the keywords. The story must be ordinary, routine, and avoid any implication of criminal intent. Use the keywords as natural, casual elements of the user's daily life or routine.",
             "Each piece of evidence is summarized by keywords only. Use only those words to infer the scenario.",
             keywordNarratives,
             "Now craft the full narrative that ties everything together.",
