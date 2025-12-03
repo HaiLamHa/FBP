@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
+import { compressBase64Image } from '@/lib/imageIO';
 
 // Initialize OpenAI client. Next.js securely reads OPENAI_API_KEY from .env.local
 const openai = new OpenAI({
@@ -15,6 +16,14 @@ export async function POST(request) {
             return NextResponse.json({ error: 'No image URL provided.' }, { status: 400 });
         }
 
+        // Compress on the server so users can upload originals
+        let compressedDataUrl = imageUrl;
+        try {
+            compressedDataUrl = await compressBase64Image(imageUrl);
+        } catch (compressionError) {
+            console.warn('Image compression failed, using original image.', compressionError);
+        }
+
         const prompt = "Analyze this image and provide exactly 4 short, descriptive keywords. Format your response as a JSON object with a single key 'keywords' containing an array of 4 strings. Example: {\"keywords\": [\"word1\", \"word2\", \"word3\", \"word4\"]}";
 
         const response = await openai.chat.completions.create({
@@ -24,7 +33,7 @@ export async function POST(request) {
                     role: "user",
                     content: [
                         { type: "text", text: prompt },
-                        { type: "image_url", image_url: { "url": imageUrl } }
+                        { type: "image_url", image_url: { "url": compressedDataUrl } }
                     ]
                 }
             ],
