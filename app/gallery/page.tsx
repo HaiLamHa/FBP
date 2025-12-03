@@ -100,41 +100,24 @@ export default function GalleryPage() {
     setLoading(show);
   };
 
-  const readFileAsDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Could not read file.'));
-    reader.readAsDataURL(file);
-  });
-
-  const validateImageDataUrl = (dataUrl: string): Promise<void> => new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error('Browser could not decode this image format.'));
-    img.src = dataUrl;
-  });
-
   /**
    * Reads the file input, converts to Base64, and updates state.
-   * Supports HEIF/HEIC where the browser can decode it; otherwise shows a friendly message.
    */
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, slotIndex: number) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, slotIndex: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const base64DataUrl = await readFileAsDataUrl(file);
-      await validateImageDataUrl(base64DataUrl); // catches unsupported HEIF/HEIC decoders
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64DataUrl = reader.result as string;
 
       setImages(prevImages => {
         const newImages = [...prevImages];
         newImages[slotIndex] = { base64: base64DataUrl, keywords: null };
         return newImages;
       });
-    } catch (err) {
-      console.error('Error loading image:', err);
-      showModal('This image type is not supported by your browser. Please convert it to JPG/PNG and try again.');
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   /**
@@ -325,7 +308,7 @@ export default function GalleryPage() {
                 {/* Hidden file input */}
                 <input
                   type="file" 
-                  accept="image/*,.heic,.heif" 
+                  accept="image/*" 
                   className="file-input" 
                   onChange={(e) => handleFileChange(e, index)}
                   ref={(el) => {
