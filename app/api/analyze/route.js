@@ -24,7 +24,7 @@ export async function POST(request) {
             console.warn('Image compression failed, using original image.', compressionError);
         }
 
-        const prompt = "Analyze this image and provide exactly 4 short, descriptive keywords. Format your response as a JSON object with a single key 'keywords' containing an array of 4 strings. Example: {\"keywords\": [\"word1\", \"word2\", \"word3\", \"word4\"]}";
+        const prompt = "Analyze this image and provide exactly 5 short, descriptive keywords. Format your response as a JSON object with a single key 'keywords' containing an array of 5 strings. Example: {\"keywords\": [\"word1\", \"word2\", \"word3\", \"word4\", \"word5\"]}";
 
         const response = await openai.chat.completions.create({
             model: "gpt-4-turbo",
