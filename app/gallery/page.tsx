@@ -38,7 +38,7 @@ const compressDataUrl = async (
   // If it's already small, skip work
   if (dataUrl.length < 500_000) return dataUrl;
 
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(maxSide / img.width, maxSide / img.height, 1);
