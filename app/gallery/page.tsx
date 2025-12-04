@@ -10,6 +10,8 @@ import { loadStoredImages, saveStoredImages } from '@/lib/galleryStorage';
 // --- Constants ---
 const NUM_SLOTS = 6;
 const API_BASE_URL = '/api'; // Next.js handles proxy to self
+const MAX_IMAGE_SIDE = 1400;
+const JPEG_QUALITY = 0.82;
 
 // --- Type Definitions ---
 interface ImageState {
@@ -26,6 +28,44 @@ interface ModalState {
 
 const createEmptyImageSlots = (): ImageState[] =>
   Array.from({ length: NUM_SLOTS }, () => ({ base64: null, keywords: null }));
+
+// --- Helpers ---
+const compressDataUrl = async (
+  dataUrl: string,
+  maxSide: number = MAX_IMAGE_SIDE,
+  quality: number = JPEG_QUALITY
+): Promise<string> => {
+  // If it's already small, skip work
+  if (dataUrl.length < 500_000) return dataUrl;
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(maxSide / img.width, maxSide / img.height, 1);
+      const width = Math.round(img.width * scale);
+      const height = Math.round(img.height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas not supported for compression.'));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressed);
+    };
+    img.onerror = () => reject(new Error('Failed to load image for compression.'));
+    img.src = dataUrl;
+  }).catch(err => {
+    console.error('Image compression failed, using original image.', err);
+    return dataUrl;
+  });
+};
 
 // --- Main Component ---
 export default function GalleryPage() {
@@ -79,17 +119,18 @@ export default function GalleryPage() {
   /**
    * Reads the file input, converts to Base64, and updates state.
    */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, slotIndex: number) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, slotIndex: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64DataUrl = reader.result as string;
+      const compressed = await compressDataUrl(base64DataUrl);
 
       setImages(prevImages => {
         const newImages = [...prevImages];
-        newImages[slotIndex] = { base64: base64DataUrl, keywords: null };
+        newImages[slotIndex] = { base64: compressed, keywords: null };
         return newImages;
       });
     };
@@ -128,6 +169,11 @@ export default function GalleryPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ imageUrl: base64DataUrl }),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Analysis failed (${response.status}): ${errorText}`);
+      }
 
       const result = await response.json();
 
