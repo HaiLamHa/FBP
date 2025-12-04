@@ -30,6 +30,9 @@ const openImageDb = (): Promise<IDBDatabase> =>
       reject(request.error ?? new Error('Failed to open IndexedDB.'));
   });
 
+const createEmptySlots = (slotCount: number): StoredImageState[] =>
+  Array.from({ length: slotCount }, () => ({ base64: null, keywords: null }));
+
 export const loadStoredImages = async (
   slotCount: number
 ): Promise<StoredImageState[]> => {
@@ -41,10 +44,7 @@ export const loadStoredImages = async (
       const request = store.getAll();
 
       request.onsuccess = () => {
-        const fallback = Array.from({ length: slotCount }, () => ({
-          base64: null,
-          keywords: null,
-        }));
+        const fallback: StoredImageState[] = createEmptySlots(slotCount);
 
         const records = request.result as { id: number }[] | undefined;
         if (!records) {
@@ -69,19 +69,11 @@ export const loadStoredImages = async (
         resolve(filled);
       };
 
-      request.onerror = () => resolve(
-        Array.from({ length: slotCount }, () => ({
-          base64: null,
-          keywords: null,
-        }))
-      );
+      request.onerror = () => resolve(createEmptySlots(slotCount));
     });
   } catch (error) {
     console.error('Error loading images from IndexedDB:', error);
-    return Array.from({ length: slotCount }, () => ({
-      base64: null,
-      keywords: null,
-    }));
+    return createEmptySlots(slotCount);
   }
 };
 
