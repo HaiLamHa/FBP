@@ -5,10 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 // FIX: Using relative path instead of alias to resolve the import issue
 import CustomModal from '@/components/CustomModal';
+import { loadStoredImages, saveStoredImages } from '@/lib/galleryStorage';
 
 // --- Constants ---
 const NUM_SLOTS = 6;
-const STORAGE_KEY = 'itwasntme_uploaded_images';
 const API_BASE_URL = '/api'; // Next.js handles proxy to self
 
 // --- Type Definitions ---
@@ -27,59 +27,35 @@ interface ModalState {
 const createEmptyImageSlots = (): ImageState[] =>
   Array.from({ length: NUM_SLOTS }, () => ({ base64: null, keywords: null }));
 
-// --- Persistence Functions ---
-const saveImagesToLocalStorage = (images: ImageState[]) => {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const serialized = JSON.stringify(
-      images.map(img => ({
-        base64: img.base64,
-        keywords: img.keywords,
-      }))
-    );
-    localStorage.setItem(STORAGE_KEY, serialized);
-  } catch (e) { console.error("Error saving images:", e); }
-};
-
-const loadImagesFromLocalStorage = (): ImageState[] => {
-  if (typeof window === 'undefined') return createEmptyImageSlots();
-
-  try {
-    const storedData = localStorage.getItem(STORAGE_KEY);
-    if (storedData) {
-      const parsed = JSON.parse(storedData);
-      if (Array.isArray(parsed)) {
-        return Array.from({ length: NUM_SLOTS }, (_, index) => {
-          const entry = parsed[index];
-          if (entry && typeof entry === 'object') {
-            const base64 = typeof entry.base64 === 'string' ? entry.base64 : null;
-            const keywords = Array.isArray(entry.keywords) ? entry.keywords : null;
-            return { base64, keywords };
-          }
-          if (typeof entry === 'string') {
-            return { base64: entry, keywords: null };
-          }
-          return { base64: null, keywords: null };
-        });
-      }
-    }
-  } catch (e) {
-    console.error("Error loading images:", e);
-  }
-  return createEmptyImageSlots();
-};
-
 // --- Main Component ---
 export default function GalleryPage() {
-  const [images, setImages] = useState<ImageState[]>(() => loadImagesFromLocalStorage());
+  const [images, setImages] = useState<ImageState[]>(() => createEmptyImageSlots());
   const [modal, setModal] = useState<ModalState>({ message: '', show: false });
   const [loading, setLoading] = useState(false);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const storageHydrated = useRef(false);
 
-  // Update localStorage whenever the images state changes
+  // Load persisted images (IndexedDB) on mount
   useEffect(() => {
-    saveImagesToLocalStorage(images);
+    let cancelled = false;
+
+    const loadImages = async () => {
+      const storedImages = await loadStoredImages(NUM_SLOTS);
+      if (!cancelled) {
+        setImages(storedImages);
+        storageHydrated.current = true;
+      }
+    };
+
+    loadImages();
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Persist images to IndexedDB whenever they change (after initial hydration)
+  useEffect(() => {
+    if (!storageHydrated.current) return;
+    saveStoredImages(images);
   }, [images]);
 
   // --- Utility Functions ---

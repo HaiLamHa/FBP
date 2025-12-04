@@ -1,11 +1,13 @@
 'use client'; // Marking this as a Client Component to allow browser-specific features and routing
 
 import Link from 'next/link';
+import { clearStoredImages } from '@/lib/galleryStorage';
 
 export default function Home() {
-  const handleReset = () => {
+  const handleReset = async () => {
     if (typeof window === 'undefined') return;
     try {
+      await clearStoredImages();
       localStorage.removeItem('itwasntme_uploaded_images');
       sessionStorage.removeItem('generatedStory');
       sessionStorage.removeItem('verdictResult');
