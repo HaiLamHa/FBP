@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import Link from 'next/link';
 // FIX: Using relative path instead of alias to resolve the import issue
 import CustomModal from '@/components/CustomModal';
@@ -39,7 +39,7 @@ const compressDataUrl = async (
   if (dataUrl.length < 500_000) return dataUrl;
 
   return new Promise<string>((resolve, reject) => {
-    const img = new Image();
+    const img = new window.Image();
     img.onload = () => {
       const scale = Math.min(maxSide / img.width, maxSide / img.height, 1);
       const width = Math.round(img.width * scale);
@@ -317,7 +317,7 @@ export default function GalleryPage() {
 
                 {/* Image Preview */}
                 {imgState.base64 && (
-                  <Image
+                  <NextImage
                     src={imgState.base64}
                     alt={`Uploaded image ${index + 1}`}
                     fill
