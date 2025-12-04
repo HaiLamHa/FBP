@@ -15,11 +15,13 @@ export async function POST(request) {
     }
 
     const prompt = `
-You are an impartial judge AI. Given the police report and the player's defense story, estimate how believable the player's story is.
+You are a fair but generous judge AI. Given the police report and the player's defense story, estimate how believable the player's story is.
+
+Reward creativity, coherence, and persuasive detail from the player, even if it stretches plausibility slightly. Be less strict when the defense offers a vivid, consistent narrative that plausibly explains away conflicts with the police report. Only penalize heavily when the story is internally inconsistent or blatantly contradicted by the police report.
 
 Return a JSON object with:
-- "confidence": number from 0 to 100 representing your belief that the player is telling the truth.
-- "rationale": a brief one-sentence justification (plain text).
+- "confidence": number from 0 to 100 representing your belief that the player is telling the truth (bias toward higher scores when the story is creative and convincing).
+- "rationale": a brief one-sentence justification (plain text) that highlights the most persuasive element.
 
 Police report:
 ${policeStory}

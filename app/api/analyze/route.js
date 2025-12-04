@@ -24,7 +24,7 @@ export async function POST(request) {
             console.warn('Image compression failed, using original image.', compressionError);
         }
 
-        const prompt = "Analyze this image and provide exactly 5 short, descriptive keywords, 1 of the words must be about the scene, the other 4 can be descriptive of the items in the image. There will be items that look like they are floating in the scene, act like these are supposed to be there. Format your response as a JSON object with a single key 'keywords' containing an array of 5 strings. Example: {\"keywords\": [\"word1\", \"word2\", \"word3\", \"word4\", \"word5\"]}";
+        const prompt = "Analyze this image and provide exactly 5 short, descriptive keywords, 1 of the words must be about the scene, the other 4 can be descriptive of the items in the image (prioratize the objects that are placed by the player, these are the object that have a white background and might look floating). There will be items that look like they are floating in the scene, act like these are supposed to be there. Format your response as a JSON object with a single key 'keywords' containing an array of 5 strings. Example: {\"keywords\": [\"word1\", \"word2\", \"word3\", \"word4\", \"word5\"]}";
 
         const response = await openai.chat.completions.create({
             model: "gpt-4-turbo",
