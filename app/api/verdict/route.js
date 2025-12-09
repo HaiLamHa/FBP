@@ -22,6 +22,8 @@ Reward creativity, coherence, and persuasive detail from the player, even if it 
 Return a JSON object with:
 - "confidence": number from 0 to 100 representing your belief that the player is telling the truth (bias toward higher scores when the story is creative and convincing).
 - "rationale": a brief one-sentence justification (plain text) that highlights the most persuasive element.
+- "strengths": 2-4 bullet points (as a single string with leading hyphens) that cite specific examples from the player's defense story (quote short phrases) that make the defense believable.
+- "weaknesses": 2-4 bullet points (as a single string with leading hyphens) that cite specific examples from the police report or conflicts in the defense story (quote short phrases) that weaken the defense.
 
 Police report:
 ${policeStory}
@@ -29,7 +31,7 @@ ${policeStory}
 Player defense story:
 ${defenseStory}
 
-Respond ONLY with JSON in this exact shape: {"confidence": 75.5, "rationale": "short reason here"}
+Respond ONLY with JSON in this exact shape: {"confidence": 75.5, "rationale": "short reason here", "strengths": "short strengths here", "weaknesses": "short weaknesses here"}
     `.trim();
 
     const response = await openai.chat.completions.create({
@@ -44,10 +46,14 @@ Respond ONLY with JSON in this exact shape: {"confidence": 75.5, "rationale": "s
     const parsed = JSON.parse(response.choices?.[0]?.message?.content || '{}');
     const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 0;
     const rationale = typeof parsed.rationale === 'string' ? parsed.rationale : 'No rationale provided.';
+    const strengths = typeof parsed.strengths === 'string' ? parsed.strengths : '';
+    const weaknesses = typeof parsed.weaknesses === 'string' ? parsed.weaknesses : '';
 
     return NextResponse.json({
       confidence,
       rationale,
+      strengths,
+      weaknesses,
     });
   } catch (error) {
     console.error('Error generating verdict:', error);

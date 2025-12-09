@@ -6,6 +6,8 @@ import Link from 'next/link';
 // FIX: Using relative path instead of alias to resolve the import issue
 import CustomModal from '@/components/CustomModal';
 import { loadStoredImages, saveStoredImages } from '@/lib/galleryStorage';
+import analyseBtn from '../../image/buttons/analyse.png';
+import generateBtn from '../../image/buttons/generate.png';
 
 // --- Constants ---
 const NUM_SLOTS = 6;
@@ -70,6 +72,7 @@ const compressDataUrl = async (
 // --- Main Component ---
 export default function GalleryPage() {
   const [images, setImages] = useState<ImageState[]>(() => createEmptyImageSlots());
+  const [keywordLoading, setKeywordLoading] = useState<boolean[]>(() => Array(NUM_SLOTS).fill(false));
   const [modal, setModal] = useState<ModalState>({ message: '', show: false });
   const [loading, setLoading] = useState(false);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -142,10 +145,10 @@ export default function GalleryPage() {
    */
   const removeImage = (slotIndex: number) => {
     setImages(prevImages => {
-      const newImages = [...prevImages];
-      newImages[slotIndex] = { base64: null, keywords: null };
-      return newImages;
-    });
+   const newImages = [...prevImages];
+    newImages[slotIndex] = { base64: null, keywords: null };
+    return newImages;
+  });
 
     // Reset the file input value so the user can upload the same file again immediately
     if (fileInputRefs.current[slotIndex]) {
@@ -153,15 +156,32 @@ export default function GalleryPage() {
     }
   };
 
+  /**
+   * Removes a single keyword from a slot (on keyword click).
+   */
+  const removeKeyword = (slotIndex: number, keywordIndex: number) => {
+    setImages(prevImages => {
+      const currentSlot = prevImages[slotIndex];
+      if (!currentSlot?.keywords) return prevImages;
+
+      const updatedKeywords = currentSlot.keywords.filter((_, idx) => idx !== keywordIndex);
+      const newImages = [...prevImages];
+      newImages[slotIndex] = { ...currentSlot, keywords: updatedKeywords };
+      return newImages;
+    });
+  };
+
   // --- API Functions ---
 
   /**
-   * Fetches 4 keywords for a single image from the backend API.
+   * Fetches 5 keywords for a single image from the backend API.
    */
   const fetchKeywords = async (base64DataUrl: string, slotIndex: number): Promise<string[]> => {
-    // Show loading indicator in the slot
-    const keywordsContainer = document.getElementById(`keywords-${slotIndex + 1}`);
-    if (keywordsContainer) keywordsContainer.innerHTML = '<div class="loading-dots"></div>';
+    setKeywordLoading(prev => {
+      const next = [...prev];
+      next[slotIndex] = true;
+      return next;
+    });
     
     try {
       const response = await fetch(`${API_BASE_URL}/analyze`, {
@@ -183,10 +203,14 @@ export default function GalleryPage() {
       
       const keywords = result.keywords as string[] || [];
       
-      // Update state with keywords
+      // Update state with new keywords appended below any existing ones
       setImages(prevImages => {
+        const prevSlot = prevImages[slotIndex];
+        const prevKeywords = prevSlot?.keywords ?? [];
+        const mergedKeywords = [...prevKeywords, ...keywords];
+
         const newImages = [...prevImages];
-        newImages[slotIndex] = { ...newImages[slotIndex], keywords: keywords.slice(0, 5) };
+        newImages[slotIndex] = { ...prevSlot, keywords: mergedKeywords };
         return newImages;
       });
       
@@ -194,8 +218,13 @@ export default function GalleryPage() {
 
     } catch (error) {
       console.error(`Error fetching keywords for slot ${slotIndex + 1}:`, error);
-      if (keywordsContainer) keywordsContainer.innerHTML = '<span class="error-text">Analysis failed</span>';
       throw new Error(`Analysis failed for slot ${slotIndex + 1}`);
+    } finally {
+      setKeywordLoading(prev => {
+        const next = [...prev];
+        next[slotIndex] = false;
+        return next;
+      });
     }
   };
 
@@ -211,17 +240,17 @@ export default function GalleryPage() {
     }
 
     // Check if analysis is already done for all uploaded images
-    const pendingAnalysis = images.some(img => img.base64 && img.keywords === null);
+    const pendingAnalysis = images.some(img => img.base64 && (!img.keywords || img.keywords.length < 5));
 
     if (!pendingAnalysis) {
-        showModal("All uploaded images have already been analyzed.");
+        showModal("All uploaded images already have 5 keywords.");
         return;
     }
 
     showLoading(true, "Analyzing images...");
 
     const analysisPromises = images.map((img, index) => {
-      if (img.base64 && img.keywords === null) {
+      if (img.base64 && (!img.keywords || img.keywords.length < 5)) {
         return fetchKeywords(img.base64, index);
       }
       return Promise.resolve(null); // Skip slots already analyzed or empty
@@ -268,16 +297,7 @@ export default function GalleryPage() {
 
       if (result.story) {
         sessionStorage.setItem('generatedStory', result.story);
-        showModal(
-          'Your story has been generated. Click "Read story" to view it.',
-          {
-            label: 'Read story',
-            handler: () => {
-              closeModal();
-              window.location.href = '/story';
-            },
-          }
-        );
+        window.location.href = '/verdict';
       } else {
         throw new Error(result.error || "Invalid response structure from backend.");
       }
@@ -293,97 +313,133 @@ export default function GalleryPage() {
 
   // --- Render Logic ---
   return (
-    <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-serif">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">It Wasn&apos;t Me - Gallery</h1>
+    <main className="min-h-screen bg-white text-gray-900 flex flex-col">
+      {/* Top navigation */}
+      <header className="w-full border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-5 relative flex items-center">
+          <Link href="/" className="relative w-[220px] h-[80px] shrink-0">
+            <NextImage
+              src="/it-wasnt-me-logo.png"
+              alt="It Wasn't Me logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </Link>
 
-        {/* Image Grid Container */}
-        <div className="gallery-grid mb-12">
-          {images.map((imgState, index) => (
-            <div key={index} className="flex flex-col">
-              {/* Image Slot (Rectangular Aspect Ratio) */}
-              <div className="image-slot group">
-                <span className="slot-number">
-                  {index + 1}.
-                </span>
-                
-                {/* Remove Button */}
-                <button 
-                  className={`remove-button ${imgState.base64 ? '' : 'hidden'}`}
-                  onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                >
-                  &times;
-                </button>
-
-                {/* Image Preview */}
-                {imgState.base64 && (
-                  <NextImage
-                    src={imgState.base64}
-                    alt={`Uploaded image ${index + 1}`}
-                    fill
-                    className="object-cover z-0"
-                    sizes="(max-width: 640px) 50vw, 33vw"
-                    unoptimized
-                  />
-                )}
-                
-                {/* Hidden file input */}
-                <input
-                  type="file" 
-                  accept="image/*" 
-                  className="file-input" 
-                  onChange={(e) => handleFileChange(e, index)}
-                  ref={(el) => {
-                    fileInputRefs.current[index] = el;
-                  }}
-                />
-                
-                {/* Placeholder Text */}
-                {!imgState.base64 && (
-                    <span className="text-white text-lg z-10 p-4 text-center group-hover:underline">Click to Upload Image</span>
-                )}
-              </div>
-
-              {/* Keyword Area */}
-              <div id={`keywords-${index + 1}`} className="keyword-container min-h-[40px] mt-3 flex flex-wrap justify-center items-center gap-2 py-1">
-                {imgState.keywords?.map((keyword, kIndex) => (
-                  <span key={kIndex} className="keyword-tag">
-                    {keyword}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+          <nav className="nav-spaced text-base md:text-lg font-semibold absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+            <Link href="/story" className="hover:text-black text-gray-600">STORY</Link>
+            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md">EVIDENCE</span>
+            <Link href="/verdict" className="hover:text-black text-gray-600">DEFENSE</Link>
+            <Link href="/verdict/result" className="hover:text-black text-gray-600">VERDICT</Link>
+          </nav>
         </div>
-        
-        {/* AI Buttons */}
-        <div className="flex justify-center space-x-8">
-            <button 
-              id="analyze-btn" 
-              className="py-3 px-8 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition duration-150 ease-in-out font-semibold text-lg disabled:opacity-50"
+      </header>
+
+      {/* Content */}
+      <section className="flex-1 w-full">
+        <div
+          className="max-w-6xl mx-auto px-4 md:px-8 mt-5 py-10 md:py-14"
+          style={{ marginTop: '20px' }}
+        >
+          <div className="gallery-grid">
+            {images.map((imgState, index) => (
+              <div key={index} className="flex flex-col items-center gap-3">
+                <div className="image-slot group">
+                  {!imgState.base64 && <span className="slot-number">{index + 1}.</span>}
+
+                  {imgState.base64 && (
+                    <button
+                      className="remove-button"
+                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                      aria-label={`Remove image ${index + 1}`}
+                    >
+                      &times;
+                    </button>
+                  )}
+
+                  {imgState.base64 && (
+                    <NextImage
+                      src={imgState.base64}
+                      alt={`Uploaded image ${index + 1}`}
+                      fill
+                      className="object-cover z-0"
+                      sizes="(max-width: 640px) 50vw, 33vw"
+                      unoptimized
+                    />
+                  )}
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="file-input"
+                    onChange={(e) => handleFileChange(e, index)}
+                    ref={(el) => { fileInputRefs.current[index] = el; }}
+                  />
+                </div>
+
+                <div className="keyword-container min-h-[32px] flex flex-wrap justify-center items-center gap-2">
+                  {keywordLoading[index] && <div className="loading-dots" aria-label="Analyzing keywords" />}
+                  {!keywordLoading[index] && imgState.keywords?.map((keyword, kIndex) => (
+                    <span
+                      key={kIndex}
+                      className="keyword-tag"
+                      role="button"
+                      tabIndex={0}
+                      title="Click to remove keyword"
+                      onClick={() => removeKeyword(index, kIndex)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          removeKeyword(index, kIndex);
+                        }
+                      }}
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center gap-20 mt-10" style={{ columnGap: '52px' }}>
+            <button
+              id="analyze-btn"
+              className="inline-flex items-center justify-center disabled:opacity-50 bg-transparent border-0 p-0 transition-transform hover:scale-105 focus:scale-105"
               onClick={handleAnalysis}
               disabled={loading}
+              aria-label="Analyse"
+              style={{ background: 'transparent', border: 'none' }}
             >
-              Analyse pictures
+              <NextImage
+                src={analyseBtn}
+                alt="Analyse"
+                width={102}
+                height={33}
+                style={{ width: '102px', height: 'auto' }}
+              />
             </button>
-            <button 
-              id="generate-btn" 
-              className="py-3 px-8 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition duration-150 ease-in-out font-semibold text-lg disabled:opacity-50"
+            <button
+              id="generate-btn"
+              className="inline-flex items-center justify-center disabled:opacity-50 bg-transparent border-0 p-0 transition-transform hover:scale-105 focus:scale-105"
               onClick={handleGenerateStory}
               disabled={loading}
+              aria-label="Generate"
+              style={{ background: 'transparent', border: 'none' }}
             >
-              Generate story
+              <NextImage
+                src={generateBtn}
+                alt="Generate"
+                width={102}
+                height={33}
+                style={{ width: '102px', height: 'auto' }}
+              />
             </button>
+          </div>
         </div>
+      </section>
 
-        <p className="text-center mt-8">
-            <Link href="/" className="text-blue-600 hover:text-blue-800 underline" legacyBehavior>
-                &larr; Back to Main Menu
-            </Link>
-        </p>
-      </div>
-
-      {/* Loading Modal */}
       {loading && (
         <div className="loading-modal-overlay">
           <div className="loading-spinner"></div>
@@ -391,14 +447,13 @@ export default function GalleryPage() {
         </div>
       )}
 
-      {/* Custom Alert/Error Modal */}
-      <CustomModal 
-        show={modal.show} 
-        message={modal.message} 
+      <CustomModal
+        show={modal.show}
+        message={modal.message}
         onClose={closeModal}
         primaryLabel={modal.actionLabel}
         onPrimary={modal.onAction ?? undefined}
       />
-    </div>
+    </main>
   );
 }

@@ -10,8 +10,53 @@
 
 /* INDEX.HTML STYLES */
 body {
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     /* We'll use Tailwind classes in the components for background/padding/etc. */
+}
+
+button {
+    padding: 5px 10px;
+}
+
+.nav-spaced {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.75rem;
+    flex-wrap: wrap;
+}
+
+@media (min-width: 1024px) {
+    .nav-spaced {
+        gap: 3.5rem;
+    }
+}
+
+.progress-track {
+    width: 100%;
+    height: 14px;
+    border-radius: 9999px;
+    background: #000;
+    overflow: hidden;
+}
+
+.page-wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+@media (min-width: 1024px) {
+    .page-wrap {
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+}
+
+/* Ensure any Tailwind serif utility also uses Calibri */
+.font-serif {
+    font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
 }
 
 /* Style for the camera input wrapper */
@@ -37,13 +82,13 @@ body {
 .gallery-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.25rem;
+    gap: 2rem;
 }
 
 @media (min-width: 1024px) {
     .gallery-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 }
@@ -51,9 +96,9 @@ body {
 /* Custom CSS for the fixed aspect ratio of the image boxes */
 .image-slot {
     position: relative;
-    background-color: #ef4444; /* Red color as shown in the mockup */
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #000;
+    border-radius: 24px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -61,26 +106,28 @@ body {
     justify-content: center;
     cursor: pointer;
     width: 100%;
-    max-width: 320px;
+    max-width: 360px;
     margin: 0 auto;
     aspect-ratio: 16 / 9; 
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .image-slot:hover {
-    transform: scale(1.02);
+    transform: scale(1.015);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
 }
 
 .slot-number {
     position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    z-index: 20;
-    background: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.25rem;
-    font-weight: 600;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    color: #f8e61c;
+    font-weight: 700;
+    font-size: 1.15rem;
+    pointer-events: none;
 }
 
 /* Styles for the visible image inside the slot */
@@ -108,14 +155,16 @@ body {
     z-index: 30; /* Above everything else */
     background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
     color: white;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     border: none;
     border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    line-height: 25px; /* Center the X vertically */
-    text-align: center;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     cursor: pointer;
     opacity: 0.8;
     transition: opacity 0.2s, background 0.2s;
@@ -129,14 +178,136 @@ body {
 /* --- AI FUNCTIONALITY STYLES --- */
 
 .keyword-tag {
-    background-color: #e0e7ff; /* Indigo-100 */
-    color: #3730a3; /* Indigo-800 */
+    background-color: #f8e61c; /* yellow */
+    color: #000; /* black */
     font-size: 0.75rem; /* 12px */
     font-weight: 500;
     padding: 2px 8px;
     border-radius: 9999px; /* rounded-full */
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
+
+.keyword-tag:hover,
+.keyword-tag:focus-visible {
+    background-color: #c7d2fe; /* Indigo-200 */
+    color: #1e1b4b; /* Indigo-950 */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    outline: none;
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: #f8e61c;
+    display: block;
+    transition: width 0s linear; /* sync with JS-driven percentage updates */
+}
+
+/* Progress widths */
+.progress-0 { width: 0%; }
+.progress-1 { width: 1%; }
+.progress-2 { width: 2%; }
+.progress-3 { width: 3%; }
+.progress-4 { width: 4%; }
+.progress-5 { width: 5%; }
+.progress-6 { width: 6%; }
+.progress-7 { width: 7%; }
+.progress-8 { width: 8%; }
+.progress-9 { width: 9%; }
+.progress-10 { width: 10%; }
+.progress-11 { width: 11%; }
+.progress-12 { width: 12%; }
+.progress-13 { width: 13%; }
+.progress-14 { width: 14%; }
+.progress-15 { width: 15%; }
+.progress-16 { width: 16%; }
+.progress-17 { width: 17%; }
+.progress-18 { width: 18%; }
+.progress-19 { width: 19%; }
+.progress-20 { width: 20%; }
+.progress-21 { width: 21%; }
+.progress-22 { width: 22%; }
+.progress-23 { width: 23%; }
+.progress-24 { width: 24%; }
+.progress-25 { width: 25%; }
+.progress-26 { width: 26%; }
+.progress-27 { width: 27%; }
+.progress-28 { width: 28%; }
+.progress-29 { width: 29%; }
+.progress-30 { width: 30%; }
+.progress-31 { width: 31%; }
+.progress-32 { width: 32%; }
+.progress-33 { width: 33%; }
+.progress-34 { width: 34%; }
+.progress-35 { width: 35%; }
+.progress-36 { width: 36%; }
+.progress-37 { width: 37%; }
+.progress-38 { width: 38%; }
+.progress-39 { width: 39%; }
+.progress-40 { width: 40%; }
+.progress-41 { width: 41%; }
+.progress-42 { width: 42%; }
+.progress-43 { width: 43%; }
+.progress-44 { width: 44%; }
+.progress-45 { width: 45%; }
+.progress-46 { width: 46%; }
+.progress-47 { width: 47%; }
+.progress-48 { width: 48%; }
+.progress-49 { width: 49%; }
+.progress-50 { width: 50%; }
+.progress-51 { width: 51%; }
+.progress-52 { width: 52%; }
+.progress-53 { width: 53%; }
+.progress-54 { width: 54%; }
+.progress-55 { width: 55%; }
+.progress-56 { width: 56%; }
+.progress-57 { width: 57%; }
+.progress-58 { width: 58%; }
+.progress-59 { width: 59%; }
+.progress-60 { width: 60%; }
+.progress-61 { width: 61%; }
+.progress-62 { width: 62%; }
+.progress-63 { width: 63%; }
+.progress-64 { width: 64%; }
+.progress-65 { width: 65%; }
+.progress-66 { width: 66%; }
+.progress-67 { width: 67%; }
+.progress-68 { width: 68%; }
+.progress-69 { width: 69%; }
+.progress-70 { width: 70%; }
+.progress-71 { width: 71%; }
+.progress-72 { width: 72%; }
+.progress-73 { width: 73%; }
+.progress-74 { width: 74%; }
+.progress-75 { width: 75%; }
+.progress-76 { width: 76%; }
+.progress-77 { width: 77%; }
+.progress-78 { width: 78%; }
+.progress-79 { width: 79%; }
+.progress-80 { width: 80%; }
+.progress-81 { width: 81%; }
+.progress-82 { width: 82%; }
+.progress-83 { width: 83%; }
+.progress-84 { width: 84%; }
+.progress-85 { width: 85%; }
+.progress-86 { width: 86%; }
+.progress-87 { width: 87%; }
+.progress-88 { width: 88%; }
+.progress-89 { width: 89%; }
+.progress-90 { width: 90%; }
+.progress-91 { width: 91%; }
+.progress-92 { width: 92%; }
+.progress-93 { width: 93%; }
+.progress-94 { width: 94%; }
+.progress-95 { width: 95%; }
+.progress-96 { width: 96%; }
+.progress-97 { width: 97%; }
+.progress-98 { width: 98%; }
+.progress-99 { width: 99%; }
+.progress-100 { width: 100%; }
 
 .error-text {
     color: #ef4444; /* red-500 */
@@ -154,7 +325,7 @@ body {
 .loading-dots::after {
   content: '...';
   font-size: 30px;
-  color: #9ca3af; /* gray-400 */
+  color: #f8e61c; /* yellow */
   position: absolute;
   top: -10px;
   left: 0;
@@ -185,7 +356,7 @@ body {
 
 .loading-spinner {
     border: 4px solid #f3f4f6; /* gray-100 */
-    border-top: 4px solid #3b82f6; /* blue-500 */
+    border-top: 4px solid #f8e61c; /* yellow */
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -196,4 +367,24 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Story page layout helper to ensure text left, image right */
+.story-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (min-width: 768px) {
+    .story-layout {
+        grid-template-columns: minmax(320px, 1.1fr) minmax(260px, 0.9fr);
+    }
+}
+
+.story-image-card {
+    max-width: 480px;
+    margin-left: auto;
+    width: 100%;
 }

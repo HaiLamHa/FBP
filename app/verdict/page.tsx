@@ -1,8 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import changeStoryBtn from '../../image/buttons/change story.png';
+import finalVerdictBtn from '../../image/buttons/final verdict.png';
 
 const getGeneratedStory = () => {
   if (typeof window === 'undefined') return '';
@@ -21,7 +24,7 @@ export default function VerdictPage() {
 
     const loadPoliceStory = async () => {
       try {
-        const response = await fetch('/police_AI_story.txt');
+        const response = await fetch('/police_AI_story.txt', { cache: 'no-store' });
         if (!response.ok) throw new Error('Failed to load police story');
         const text = await response.text();
         setPoliceStory(text);
@@ -60,11 +63,13 @@ export default function VerdictPage() {
       const rationale = result.rationale ?? 'No rationale provided.';
       const isNotGuilty = confidence >= 80;
       const verdictText = isNotGuilty ? 'Not guilty' : 'Guilty';
+      const strengths = result.strengths ?? '';
+      const weaknesses = result.weaknesses ?? '';
 
       if (typeof window !== 'undefined') {
         window.sessionStorage.setItem(
           'verdictResult',
-          JSON.stringify({ confidence, rationale, verdictText })
+          JSON.stringify({ confidence, rationale, verdictText, strengths, weaknesses })
         );
       }
 
@@ -78,42 +83,89 @@ export default function VerdictPage() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4 md:p-8 font-serif">
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg space-y-6">
-        <h1 className="text-4xl font-bold text-center text-gray-800">The Verdict</h1>
-        <p className="text-center text-gray-600">Review both accounts before requesting judgement.</p>
-
-        <section className="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-3">Official police report</h2>
-          <div className="text-lg text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[220px] max-h-[380px] overflow-y-auto">
-            {policeStory}
-          </div>
-        </section>
-
-        <div className="flex flex-col items-center">
-          <button
-            onClick={handleVerdict}
-            disabled={loading}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition disabled:opacity-60"
-          >
-            {loading ? 'Requesting verdict...' : 'Final verdict'}
-          </button>
-          {error && <p className="text-red-600 mt-2 text-sm text-center">{error}</p>}
-        </div>
-
-        <section className="bg-gray-50 border border-gray-200 rounded-lg p-4 md:p-6">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-3">AI generated story</h2>
-          <div className="text-lg text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[220px] max-h-[380px] overflow-y-auto">
-            {generatedStory || 'No generated story found. Please create one from the Gallery page first.'}
-          </div>
-        </section>
-
-        <p className="text-center pt-2">
-          <Link href="/" className="text-blue-600 hover:text-blue-800 underline" legacyBehavior>
-            &larr; Back to Main Menu
+    <main className="min-h-screen bg-white text-gray-900 flex flex-col">
+      {/* Top navigation */}
+      <header className="w-full border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-5 relative flex items-center">
+          <Link href="/" className="relative w-[220px] h-[80px] shrink-0">
+            <Image
+              src="/it-wasnt-me-logo.png"
+              alt="It Wasn't Me logo"
+              fill
+              className="object-contain"
+              priority
+            />
           </Link>
-        </p>
-      </div>
-    </div>
+
+          <nav className="nav-spaced text-base md:text-lg font-semibold absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+            <Link href="/story" className="hover:text-black text-gray-600">STORY</Link>
+            <Link href="/gallery" className="hover:text-black text-gray-600">EVIDENCE</Link>
+            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md">DEFENSE</span>
+            <Link href="/verdict/result" className="hover:text-black text-gray-600">VERDICT</Link>
+          </nav>
+        </div>
+      </header>
+
+      {/* Content */}
+      <section className="flex-1 w-full">
+        <div className="max-w-5xl mx-auto px-6 md:px-14 py-10 md:py-14 space-y-10 text-center">
+          {/* AI Story */}
+          <div className="space-y-4" style={{ marginBottom: '20px' }}>
+            <h1 className="text-lg md:text-xl font-bold uppercase">Your AI Story</h1>
+            <div className="text-base md:text-lg leading-relaxed text-gray-900 whitespace-pre-line text-left md:text-justify max-w-3xl mx-auto">
+              {generatedStory || 'No generated story found. Please create one from the Gallery page first.'}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-center gap-10" style={{ columnGap: '60px' }}>
+            <Link
+              href="/gallery"
+              className="inline-flex items-center justify-center transition-transform hover:scale-105 focus:scale-105"
+              aria-label="Change Story"
+            >
+              <Image
+                src={changeStoryBtn}
+                alt="Change Story"
+                width={133}
+                height={43}
+                style={{ width: '133px', height: 'auto' }}
+              />
+            </Link>
+            <button
+              onClick={handleVerdict}
+              disabled={loading}
+              className="inline-flex items-center justify-center disabled:opacity-60 bg-transparent border-0 p-0 transition-transform hover:scale-105 focus:scale-105"
+              aria-label={loading ? 'Requesting verdict' : 'Final Verdict'}
+              style={{ background: 'transparent', border: 'none' }}
+            >
+              <Image
+                src={finalVerdictBtn}
+                alt="Final Verdict"
+                width={133}
+                height={43}
+                style={{ width: '133px', height: 'auto' }}
+              />
+            </button>
+          </div>
+          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+
+          {/* Police Story */}
+          <div className="space-y-4">
+            <h2 className="text-lg md:text-xl font-bold uppercase">Police Story</h2>
+            <div className="text-base md:text-lg leading-relaxed text-gray-900 whitespace-pre-line text-left md:text-justify max-w-3xl mx-auto">
+              {policeStory}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {loading && (
+        <div className="loading-modal-overlay">
+          <div className="loading-spinner"></div>
+          <p id="loading-text">Requesting verdict...</p>
+        </div>
+      )}
+    </main>
   );
 }
