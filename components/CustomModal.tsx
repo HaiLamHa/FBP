@@ -38,18 +38,25 @@ export default function CustomModal({ show, message, onClose, primaryLabel, onPr
   return (
     <div 
       id="custom-modal" 
-      className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-[60] transition-opacity duration-300 opacity-100"
+      className="fixed inset-0 z-[100] grid place-items-center w-full h-full transition-opacity duration-300 opacity-100 p-4 bg-black/40"
       onClick={onClose} // Allows clicking outside to close
     >
       <div 
         ref={contentRef}
-        className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full transform transition-transform duration-300 scale-95 opacity-0" 
+        className="bg-white p-4 rounded-lg shadow-xl max-w-sm w-full transform transition-transform duration-300 scale-95 opacity-0 text-center flex flex-col items-center space-y-3"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
       >
-        <p className="text-gray-700 mb-4 whitespace-pre-wrap">{message}</p>
-        <button 
-          onClick={handlePrimaryClick} 
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+        <p className="text-gray-700 whitespace-pre-wrap">{message}</p>
+        <button
+          onClick={handlePrimaryClick}
+          className="inline-flex items-center justify-center text-sm font-extrabold text-black rounded-md transition"
+          style={{
+            backgroundColor: '#F8EA48',
+            padding: '6px 12px',
+            borderRadius: '5px',
+            border: 'none',
+            fontWeight: 800,
+          }}
         >
           {primaryLabel ?? 'OK'}
         </button>

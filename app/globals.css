@@ -9,9 +9,17 @@
 /* -------------------------------------------------------------------------- */
 
 /* INDEX.HTML STYLES */
-body {
+:root {
     font-family: "Calibri", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body {
+    font-family: inherit;
     /* We'll use Tailwind classes in the components for background/padding/etc. */
+}
+
+* {
+    font-family: inherit;
 }
 
 button {
@@ -26,12 +34,38 @@ button {
     flex-wrap: wrap;
 }
 
+@media (max-width: 640px) {
+    .nav-spaced {
+        display: none;
+    }
+}
+
 @media (min-width: 1024px) {
     .nav-spaced {
         gap: 3.5rem;
     }
 }
 
+.nav-spaced button {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+.nav-spaced button:focus {
+    outline: none;
+}
+
+.nav-spaced .active {
+    font-weight: 800;
+    background-color: #F8EA48;
+    color: #000;
+    padding: 6px 12px;
+    border-radius: 5px;
+}
 .progress-track {
     width: 100%;
     height: 14px;
@@ -107,7 +141,7 @@ button {
     cursor: pointer;
     width: 100%;
     max-width: 360px;
-    margin: 0 auto;
+    margin: 6px auto;
     aspect-ratio: 16 / 9; 
     transition: transform 0.2s, box-shadow 0.2s;
 }

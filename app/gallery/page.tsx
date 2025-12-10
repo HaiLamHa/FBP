@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import NextImage from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 // FIX: Using relative path instead of alias to resolve the import issue
 import CustomModal from '@/components/CustomModal';
 import { loadStoredImages, saveStoredImages } from '@/lib/galleryStorage';
@@ -71,6 +72,7 @@ const compressDataUrl = async (
 
 // --- Main Component ---
 export default function GalleryPage() {
+  const router = useRouter();
   const [images, setImages] = useState<ImageState[]>(() => createEmptyImageSlots());
   const [keywordLoading, setKeywordLoading] = useState<boolean[]>(() => Array(NUM_SLOTS).fill(false));
   const [modal, setModal] = useState<ModalState>({ message: '', show: false });
@@ -328,10 +330,10 @@ export default function GalleryPage() {
           </Link>
 
           <nav className="nav-spaced text-base md:text-lg font-semibold absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <Link href="/story" className="hover:text-black text-gray-600">STORY</Link>
-            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md">EVIDENCE</span>
-            <Link href="/verdict" className="hover:text-black text-gray-600">DEFENSE</Link>
-            <Link href="/verdict/result" className="hover:text-black text-gray-600">VERDICT</Link>
+            <button onClick={() => router.push('/story')} className="hover:text-black text-gray-600" type="button">STORY</button>
+            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md active">EVIDENCE</span>
+            <button onClick={() => router.push('/verdict')} className="hover:text-black text-gray-600" type="button">DEFENSE</button>
+            <button onClick={() => router.push('/verdict/result')} className="hover:text-black text-gray-600" type="button">VERDICT</button>
           </nav>
         </div>
       </header>
@@ -342,6 +344,9 @@ export default function GalleryPage() {
           className="max-w-6xl mx-auto px-4 md:px-8 mt-5 py-10 md:py-14"
           style={{ marginTop: '20px' }}
         >
+          <div className="w-full text-center mb-6 text-base font-semibold text-gray-900">
+            Click an empty slot to upload your evidence.
+          </div>
           <div className="gallery-grid">
             {images.map((imgState, index) => (
               <div key={index} className="flex flex-col items-center gap-3">

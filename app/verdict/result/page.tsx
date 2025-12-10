@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import playAgainBtn from '../../../image/buttons/play again.png';
 
 interface VerdictResult {
@@ -30,6 +31,7 @@ const resetAll = () => {
 };
 
 export default function VerdictResultPage() {
+  const router = useRouter();
   const [result, setResult] = useState<VerdictResult | null>(null);
   const [progress, setProgress] = useState(0);
   const [showVerdictText, setShowVerdictText] = useState(false);
@@ -96,10 +98,10 @@ export default function VerdictResultPage() {
           </Link>
 
           <nav className="nav-spaced text-base md:text-lg font-semibold ml-2 md:ml-4 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <Link href="/story" className="hover:text-black text-gray-600">STORY</Link>
-            <Link href="/gallery" className="hover:text-black text-gray-600">EVIDENCE</Link>
-            <Link href="/verdict" className="hover:text-black text-gray-600">DEFENSE</Link>
-            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md">VERDICT</span>
+            <button onClick={() => router.push('/story')} className="hover:text-black text-gray-600" type="button">STORY</button>
+            <button onClick={() => router.push('/gallery')} className="hover:text-black text-gray-600" type="button">EVIDENCE</button>
+            <button onClick={() => router.push('/verdict')} className="hover:text-black text-gray-600" type="button">DEFENSE</button>
+            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md active">VERDICT</span>
           </nav>
         </div>
       </header>

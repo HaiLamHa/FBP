@@ -98,10 +98,10 @@ export default function VerdictPage() {
           </Link>
 
           <nav className="nav-spaced text-base md:text-lg font-semibold absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
-            <Link href="/story" className="hover:text-black text-gray-600">STORY</Link>
-            <Link href="/gallery" className="hover:text-black text-gray-600">EVIDENCE</Link>
-            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md">DEFENSE</span>
-            <Link href="/verdict/result" className="hover:text-black text-gray-600">VERDICT</Link>
+            <button onClick={() => router.push('/story')} className="hover:text-black text-gray-600" type="button">STORY</button>
+            <button onClick={() => router.push('/gallery')} className="hover:text-black text-gray-600" type="button">EVIDENCE</button>
+            <span className="px-4 py-2 bg-[#f8e61c] text-black rounded-md shadow-md active">DEFENSE</span>
+            <button onClick={() => router.push('/verdict/result')} className="hover:text-black text-gray-600" type="button">VERDICT</button>
           </nav>
         </div>
       </header>
@@ -113,7 +113,7 @@ export default function VerdictPage() {
           <div className="space-y-4" style={{ marginBottom: '20px' }}>
             <h1 className="text-lg md:text-xl font-bold uppercase">Your AI Story</h1>
             <div className="text-base md:text-lg leading-relaxed text-gray-900 whitespace-pre-line text-left md:text-justify max-w-3xl mx-auto">
-              {generatedStory || 'No generated story found. Please create one from the Gallery page first.'}
+              {generatedStory || 'No generated story found. Please create one from the Evidence page first.'}
             </div>
           </div>
 
@@ -150,13 +150,6 @@ export default function VerdictPage() {
           </div>
           {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
-          {/* Police Story */}
-          <div className="space-y-4">
-            <h2 className="text-lg md:text-xl font-bold uppercase">Police Story</h2>
-            <div className="text-base md:text-lg leading-relaxed text-gray-900 whitespace-pre-line text-left md:text-justify max-w-3xl mx-auto">
-              {policeStory}
-            </div>
-          </div>
         </div>
       </section>
 
