@@ -14,7 +14,7 @@ export default function EvidencePage() {
   useEffect(() => {
     const loadPoliceStory = async () => {
       try {
-        const response = await fetch('/police_AI_story.txt', { cache: 'no-store' });
+        const response = await fetch('/police_AI_story_short.txt', { cache: 'no-store' });
         if (!response.ok) throw new Error('Failed to load police story');
         const text = await response.text();
         setPoliceStory(text);

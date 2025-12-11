@@ -74,7 +74,7 @@ export default function VerdictResultPage() {
   const verdictTitle = (() => {
     if (!result) return '';
     const isNotGuilty = (result.verdictText || '').toLowerCase().includes('not');
-    return isNotGuilty ? 'NOT GUILTY' : 'GUILTY';
+    return isNotGuilty ? 'INNOCENT' : 'GUILTY';
   })();
 
   const handlePlayAgain = () => {
